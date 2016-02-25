@@ -124,4 +124,6 @@ include("get_problem_data.jl")
 include("formulations/base.jl")
 include("formulations/base_cuts.jl")
 
+include("formulations/sdp.jl")
+
 end

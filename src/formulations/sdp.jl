@@ -3,18 +3,15 @@ import Mosek
 export solveTakouda
 function solveTakouda(prob::Problem)
 
-    N   = prob.N
-	lbˣ = prob.wlb
-	lbʸ = prob.hlb
-	ubˣ = prob.wub
-	ubʸ = prob.hub
-	p   = prob.c
-	α   = prob.area
-	Lˣ  = prob.W
-	Lʸ  = prob.H
-
-    W = W/2
-    H = H/2
+    n   = prob.N
+	wlb = prob.wlb
+	hlb = prob.hlb
+	wub = prob.wub
+	hub = prob.hub
+	c   = prob.c
+	area = prob.area
+	W  = prob.W / 2
+	H  = prob.H / 2
 
     β = prob.aspect
 
@@ -29,7 +26,7 @@ function solveTakouda(prob::Problem)
         Uʸ[i,j] = W - 0.5*(hlb[i] + hlb[j])
     end
 
-    model = Model(solver=MosekSolver())
+    model = Model(solver=Mosek.MosekSolver())
 
     @defVar(model, x[1:n])
     @defVar(model, y[1:n])
@@ -130,7 +127,6 @@ function solveTakouda(prob::Problem)
 
     @setObjective(model, Min, dot(c,dˣ + dʸ))
     buildInternalModel(model)
-    putdouparam(MathProgBase.getrawsolver(getInternalModel(model)), MSK_DPAR_OPTIMIZER_MAX_TIME, 1.0)
     elapse = @elapsed (stat = solve(model))
     println("Objective value = $(getObjectiveValue(model)) in $elapse sec")
     return getObjectiveValue(model)
