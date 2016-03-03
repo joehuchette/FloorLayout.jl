@@ -1,6 +1,6 @@
 module FloorLayout
 
-using JuMP, MathProgBase, CPLEX
+using JuMP, MathProgBase
 
 export Problem,
        Solution,
