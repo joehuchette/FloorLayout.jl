@@ -28,20 +28,20 @@ function solveTakouda(prob::Problem)
 
     model = Model(solver=Mosek.MosekSolver())
 
-    @defVar(model, x[1:n])
-    @defVar(model, y[1:n])
-    @defVar(model, wlb[i] <= w[i=1:n] <= wub[i])
-    @defVar(model, hlb[i] <= h[i=1:n] <= hub[i])
-    @defVar(model, dˣ[1:n,1:n] >= 0)
-    @defVar(model, dʸ[1:n,1:n] >= 0)
-    @defVar(model, Sˣ[1:n,1:n] >= 0)
-    @defVar(model, Sʸ[1:n,1:n] >= 0)
+    @variable(model, x[1:n])
+    @variable(model, y[1:n])
+    @variable(model, wlb[i] <= w[i=1:n] <= wub[i])
+    @variable(model, hlb[i] <= h[i=1:n] <= hub[i])
+    @variable(model, dˣ[1:n,1:n] >= 0)
+    @variable(model, dʸ[1:n,1:n] >= 0)
+    @variable(model, Sˣ[1:n,1:n] >= 0)
+    @variable(model, Sʸ[1:n,1:n] >= 0)
     tn  = convert(Int,  n*( n-1)/2)
     ttn = convert(Int, tn*(tn-1)/2)
     nvar = 1+2tn+2ttn
-    @defVar(model, bin[1:nvar,1:nvar], SDP)
+    @variable(model, bin[1:nvar,1:nvar], SDP)
     for i in 1:nvar
-        @addConstraint(model, bin[i,i] == 1)
+        @constraint(model, bin[i,i] == 1)
     end
 
     # functions for referencing elements of σα; #assume access of upper tri
@@ -72,8 +72,8 @@ function solveTakouda(prob::Problem)
 
     for i in 1:tn
         for j in (i+1):tn
-            @addConstraint(model, bin[1,1+2tn+    full_into_ttn(i,j)] == bin[1+i,1+j])
-            @addConstraint(model, bin[1,1+2tn+ttn+full_into_ttn(i,j)] == bin[1+tn+i,1+tn+j])
+            @constraint(model, bin[1,1+2tn+    full_into_ttn(i,j)] == bin[1+i,1+j])
+            @constraint(model, bin[1,1+2tn+ttn+full_into_ttn(i,j)] == bin[1+tn+i,1+tn+j])
         end
     end
     for i in 1:n
@@ -96,36 +96,36 @@ function solveTakouda(prob::Problem)
         @addSDPConstraint(model, sitbconstr >= 0)
 
         for j in (i+1):n
-            @addConstraint(model, dˣ[i,j] >= 0.5*(w[i]+w[j]) - 0.5*(1-σ(i,j))*Qˣ[i,j]) # 12
-            @addConstraint(model, dʸ[i,j] >= 0.5*(h[i]+h[j]) - 0.5*(1+σ(i,j))*Qʸ[i,j]) # 19
-            @addConstraint(model, dˣ[i,j] - 2Sˣ[i,j] == x[j] - x[i]) # 13
-            @addConstraint(model, Sˣ[i,j] <= 0.25*(3 - σ(i,j) - α(i,j) - σα(i,j,i,j))*Uˣ[i,j]) # 15
-            @addConstraint(model, Sˣ[i,j] + x[j] - x[i] >= 0) # 16
-            @addConstraint(model, Sˣ[i,j] + x[j] - x[i] <= 0.25*(3 - σ(i,j) + α(i,j) + σα(i,j,i,j))*Uˣ[i,j]) # 17
-            @addConstraint(model, dʸ[i,j] - 2Sʸ[i,j] == y[j] - y[i]) # 20
-            @addConstraint(model, Sʸ[i,j] <= 0.25*(3 + σ(i,j) - α(i,j) + σα(i,j,i,j))*Uʸ[i,j]) # 22
-            @addConstraint(model, Sʸ[i,j] + y[j] - y[i] >= 0) # 23
-            @addConstraint(model, Sʸ[i,j] + y[j] - y[i] <= 0.25*(3 + σ(i,j) + α(i,j) - σα(i,j,i,j))*Uʸ[i,j]) # 24
+            @constraint(model, dˣ[i,j] >= 0.5*(w[i]+w[j]) - 0.5*(1-σ(i,j))*Qˣ[i,j]) # 12
+            @constraint(model, dʸ[i,j] >= 0.5*(h[i]+h[j]) - 0.5*(1+σ(i,j))*Qʸ[i,j]) # 19
+            @constraint(model, dˣ[i,j] - 2Sˣ[i,j] == x[j] - x[i]) # 13
+            @constraint(model, Sˣ[i,j] <= 0.25*(3 - σ(i,j) - α(i,j) - σα(i,j,i,j))*Uˣ[i,j]) # 15
+            @constraint(model, Sˣ[i,j] + x[j] - x[i] >= 0) # 16
+            @constraint(model, Sˣ[i,j] + x[j] - x[i] <= 0.25*(3 - σ(i,j) + α(i,j) + σα(i,j,i,j))*Uˣ[i,j]) # 17
+            @constraint(model, dʸ[i,j] - 2Sʸ[i,j] == y[j] - y[i]) # 20
+            @constraint(model, Sʸ[i,j] <= 0.25*(3 + σ(i,j) - α(i,j) + σα(i,j,i,j))*Uʸ[i,j]) # 22
+            @constraint(model, Sʸ[i,j] + y[j] - y[i] >= 0) # 23
+            @constraint(model, Sʸ[i,j] + y[j] - y[i] <= 0.25*(3 + σ(i,j) + α(i,j) - σα(i,j,i,j))*Uʸ[i,j]) # 24
 
             for k in (j+1):n
-                @addConstraint(model, αα(i,j,i,k) - αα(i,j,j,k) + αα(i,k,j,k) +
+                @constraint(model, αα(i,j,i,k) - αα(i,j,j,k) + αα(i,k,j,k) +
                                     -σσ(i,j,i,k) - σσ(i,j,j,k) - σσ(i,k,j,k) +
                                      σσαα(i,j,i,k,i,j,i,k) - σσαα(i,j,i,k,i,j,j,k) + σσαα(i,j,i,k,i,k,j,k) +
                                      σσαα(i,j,j,k,i,j,i,k) - σσαα(i,j,j,k,i,j,j,k) + σσαα(i,j,j,k,i,k,j,k) +
                                      σσαα(i,k,j,k,i,j,i,k) - σσαα(i,k,j,k,i,j,j,k) + σσαα(i,k,j,k,i,k,j,k) == 1)
             end
             # symmetry breaking
-            @addConstraint(model, dˣ[i,j] >= 0.25*(wlb[i]+wlb[j]) * (1 + σ(i,j)))
-            @addConstraint(model, dʸ[i,j] >= 0.25*(hlb[i]+hlb[j]) * (1 - σ(i,j)))
+            @constraint(model, dˣ[i,j] >= 0.25*(wlb[i]+wlb[j]) * (1 + σ(i,j)))
+            @constraint(model, dʸ[i,j] >= 0.25*(hlb[i]+hlb[j]) * (1 - σ(i,j)))
             # # S valid inequalities
-            @addConstraint(model, x[i] + 0.5w[i] <= x[j] - 0.5w[j] + 0.5*(3 - σ(i,j) - α(i,j) - σα(i,j,i,j))*W)
-            @addConstraint(model, x[j] + 0.5w[j] <= x[i] - 0.5w[i] + 0.5*(3 - σ(i,j) + α(i,j) + σα(i,j,i,j))*W)
-            @addConstraint(model, y[i] + 0.5h[i] <= y[j] - 0.5h[j] + 0.5*(3 + σ(i,j) - α(i,j) - σα(i,j,i,j))*H)
-            @addConstraint(model, y[j] + 0.5h[j] <= y[i] - 0.5h[i] + 0.5*(3 + σ(i,j) + α(i,j) + σα(i,j,i,j))*H)
+            @constraint(model, x[i] + 0.5w[i] <= x[j] - 0.5w[j] + 0.5*(3 - σ(i,j) - α(i,j) - σα(i,j,i,j))*W)
+            @constraint(model, x[j] + 0.5w[j] <= x[i] - 0.5w[i] + 0.5*(3 - σ(i,j) + α(i,j) + σα(i,j,i,j))*W)
+            @constraint(model, y[i] + 0.5h[i] <= y[j] - 0.5h[j] + 0.5*(3 + σ(i,j) - α(i,j) - σα(i,j,i,j))*H)
+            @constraint(model, y[j] + 0.5h[j] <= y[i] - 0.5h[i] + 0.5*(3 + σ(i,j) + α(i,j) + σα(i,j,i,j))*H)
         end
     end
 
-    @setObjective(model, Min, dot(c,dˣ + dʸ))
+    @objective(model, Min, dot(c,dˣ + dʸ))
     buildInternalModel(model)
     elapse = @elapsed (stat = solve(model))
     println("Objective value = $(getObjectiveValue(model)) in $elapse sec")

@@ -43,9 +43,9 @@ get_metrics(::Objective,   prob::Problem, i, j) = prob.c[i,j]
 get_metrics(::Lowerbounds, prob::Problem, i, j) = prob.wlb[i] + prob.wlb[j] + prob.hlb[i] + prob.hlb[j]
 
 function binary_variables(model::Model, N, ::Unary; redundant=false)
-	@defVar(model, v[i=1:N,j=1:N,1:2;i!=j], Bin)
-	# @defVar(model, v[1:N,1:N,1:2], Bin)
-	@addConstraint(model, c1[i=1:N,j=(i+1):N], v[i,j,1] + v[j,i,1] + v[i,j,2] + v[j,i,2] == 1)
+	@variable(model, v[i=1:N,j=1:N,1:2;i!=j], Bin)
+	# @variable(model, v[1:N,1:N,1:2], Bin)
+	@constraint(model, c1[i=1:N,j=(i+1):N], v[i,j,1] + v[j,i,1] + v[i,j,2] + v[j,i,2] == 1)
 
 	arrx, arry = Array(Variable, N, N), Array(Variable, N, N)
 	for i in 1:N, j in (i+1):N
@@ -59,9 +59,9 @@ function binary_variables(model::Model, N, ::Unary; redundant=false)
 end
 
 function binary_variables(model::Model, N, ::Partition4Bit; redundant=false)
-	@defVar(model, v[1:N,1:N,1:2], Bin)
-	@addConstraint(model, c1[i=1:N,j=(i+1):N], v[i,j,1] + v[i,j,2] + v[j,i,1] + v[j,i,2] ≥ 1)
-	@addConstraint(model, c1[i=1:N,j=(i+1):N,s=1:2], v[i,j,s] + v[j,i,s] ≤ 1)
+	@variable(model, v[1:N,1:N,1:2], Bin)
+	@constraint(model, c1[i=1:N,j=(i+1):N], v[i,j,1] + v[i,j,2] + v[j,i,1] + v[j,i,2] ≥ 1)
+	@constraint(model, c1[i=1:N,j=(i+1):N,s=1:2], v[i,j,s] + v[j,i,s] ≤ 1)
 
 	return v, v[:,:,1], v[:,:,2]
 end
@@ -94,19 +94,19 @@ end
 
 function binary_variables{B<:BinaryGray}(model::Model, N, ::B; redundant=false)
 	if redundant
-		@defVar(model, z⁺[1:N,1:N], Bin)
-		@defVar(model, z⁻[1:N,1:N], Bin)
+		@variable(model, z⁺[1:N,1:N], Bin)
+		@variable(model, z⁻[1:N,1:N], Bin)
 	else
-		@defVar(model, z⁺[i=1:N,(i+1):N], Bin)
-		@defVar(model, z⁻[i=1:N,(i+1):N], Bin)
+		@variable(model, z⁺[i=1:N,(i+1):N], Bin)
+		@variable(model, z⁻[i=1:N,(i+1):N], Bin)
 	end
 	arrˣ = Array(AffExpr, N, N)
 	arrʸ = Array(AffExpr, N, N)
 	for i in 1:N
 		for j in (i+1):N
 			if redundant
-				@addConstraint(model, z⁺[i,j] + z⁺[j,i] == 1)
-				@addConstraint(model, z⁻[i,j] == z⁻[j,i])
+				@constraint(model, z⁺[i,j] + z⁺[j,i] == 1)
+				@constraint(model, z⁻[i,j] == z⁻[j,i])
 			end
 			val = ℒ([z⁺[i,j],z⁻[i,j]], B)
 			arrˣ[i,j] = val[1]
@@ -135,15 +135,15 @@ end
 
 function binary_variables{B<:BinaryBlack}(model::Model, N, ::B; redundant=true)
 	if redundant
-		@defVar(model, z⁺[1:N,1:N], Bin)
-		@defVar(model, z⁻[1:N,1:N], Bin)
+		@variable(model, z⁺[1:N,1:N], Bin)
+		@variable(model, z⁻[1:N,1:N], Bin)
 		for i in 1:N, j in (i+1):N
-			@addConstraint(model, z⁺[i,j] + z⁺[j,i] == 1)
-			@addConstraint(model, z⁻[i,j] + z⁻[j,i] == 1)
+			@constraint(model, z⁺[i,j] + z⁺[j,i] == 1)
+			@constraint(model, z⁻[i,j] + z⁻[j,i] == 1)
 		end
 	else
-		@defVar(model, tmp⁺[i=1:N,(i+1):N], Bin)
-		@defVar(model, tmp⁻[i=1:N,(i+1):N], Bin)
+		@variable(model, tmp⁺[i=1:N,(i+1):N], Bin)
+		@variable(model, tmp⁻[i=1:N,(i+1):N], Bin)
 		z⁺ = Array(AffExpr, N, N)
 		z⁻ = Array(AffExpr, N, N)
 		for i in 1:N, j in (i+1):N
@@ -176,13 +176,13 @@ function base_model{F<:Formulation}(model::Model, prob::Problem, form::F; redund
 	Lˣ  = prob.W
 	Lʸ  = prob.H
 
-	@defVar(model, 0 ≤ cˣ[i=1:N] ≤ Lˣ)
-	@defVar(model, 0 ≤ cʸ[i=1:N] ≤ Lʸ)
-	@defVar(model, lbˣ[i] ≤ ℓˣ[i=1:N] ≤ ubˣ[i])
-	@defVar(model, lbʸ[i] ≤ ℓʸ[i=1:N] ≤ ubʸ[i])
+	@variable(model, 0 ≤ cˣ[i=1:N] ≤ Lˣ)
+	@variable(model, 0 ≤ cʸ[i=1:N] ≤ Lʸ)
+	@variable(model, lbˣ[i] ≤ ℓˣ[i=1:N] ≤ ubˣ[i])
+	@variable(model, lbʸ[i] ≤ ℓʸ[i=1:N] ≤ ubʸ[i])
 
-	@defVar(model, tˣ[i=1:N,(i+1):N] ≥ 0)
-	@defVar(model, tʸ[i=1:N,(i+1):N] ≥ 0)
+	@variable(model, tˣ[i=1:N,(i+1):N] ≥ 0)
+	@variable(model, tʸ[i=1:N,(i+1):N] ≥ 0)
 	dˣ = Array(Variable, N, N)
 	dʸ = Array(Variable, N, N)
 	for i in 1:N
@@ -194,13 +194,13 @@ function base_model{F<:Formulation}(model::Model, prob::Problem, form::F; redund
 		end
 	end
 
-	@addConstraints(model, begin
+	@constraints(model, begin
 		c3[i=1:N,j=(i+1):N], dˣ[i,j] ≥ cˣ[i] - cˣ[j]
 		c4[i=1:N,j=(i+1):N], dˣ[i,j] ≥ cˣ[j] - cˣ[i]
 		c5[i=1:N,j=(i+1):N], dʸ[i,j] ≥ cʸ[i] - cʸ[j]
 		c6[i=1:N,j=(i+1):N], dʸ[i,j] ≥ cʸ[j] - cʸ[i]
 	end)
-	@setObjective(model, Min, sum{p[i,j]*(dˣ[i,j]+dʸ[i,j]), i=1:N, j=(i+1):N})
+	@objective(model, Min, sum{p[i,j]*(dˣ[i,j]+dʸ[i,j]), i=1:N, j=(i+1):N})
 
 	v, zˣ, zʸ = binary_variables(model, N, form; redundant=redundant)
 
@@ -219,7 +219,7 @@ function base_model{F<:Formulation}(model::Model, prob::Problem, form::F; redund
 		@assert 1 ≤ jj ≤ N
 		@assert p[ii,jj] == maxval
 		@assert ii != jj
-		@addConstraints(model, begin
+		@constraints(model, begin
 			cˣ[ii] ≤ cˣ[jj]
 			cʸ[ii] ≤ cʸ[jj]
 			zˣ[jj,ii] ≤ 0
@@ -235,7 +235,7 @@ function add_area(model::Model, prob::Problem, ::Formulation{SOC}, vars::Variabl
 	ℓˣ, ℓʸ = vars.ℓˣ, vars.ℓʸ
 	@assert (N = length(ℓˣ)) == length(ℓʸ)
 	α = prob.area
-	@addConstraint(model, c[i=1:N], ℓˣ[i]*ℓʸ[i] ≥ α[i])
+	@constraint(model, c[i=1:N], ℓˣ[i]*ℓʸ[i] ≥ α[i])
 end
 
 function add_area(model::Model, prob::Problem, form::Formulation{Linearize}, vars::Variables)
@@ -251,7 +251,7 @@ function add_area(model::Model, prob::Problem, form::Formulation{Linearize}, var
         bnd = lbˣ[i]
         for k = 0:Cᵢ
             bnd *= fac
-            @addConstraint(model, -ℓʸ[i] - α[i]/bnd^2*ℓˣ[i] <= -2*α[i]/bnd)
+            @constraint(model, -ℓʸ[i] - α[i]/bnd^2*ℓˣ[i] <= -2*α[i]/bnd)
         end
     end
 
@@ -265,7 +265,7 @@ function add_nonoverlap(model::Model, prob::Problem, form::Formulation, vars::Va
 	zˣ, zʸ = vars.zˣ, vars.zʸ
 	for i in 1:N, j in 1:N
 		i == j && continue
-		@addConstraints(model, begin
+		@constraints(model, begin
 			cˣ[i] - cˣ[j] + 0.5*(ℓˣ[i]+ℓˣ[j]) ≤ Lˣ*(1 - zˣ[i,j])
 			cʸ[i] - cʸ[j] + 0.5*(ℓʸ[i]+ℓʸ[j]) ≤ Lʸ*(1 - zʸ[i,j])
 		end)
@@ -280,7 +280,7 @@ function add_nonoverlap{B<:Partition4Bit}(model::Model, prob::Problem, form::B, 
 	ℓˣ, ℓʸ = vars.ℓˣ, vars.ℓʸ
 	zˣ, zʸ = vars.zˣ, vars.zʸ
 	for i in 1:N, j in (i+1):N
-		@addConstraints(model, begin
+		@constraints(model, begin
 			cˣ[i] - cˣ[j] + 0.5*(ℓˣ[i]+ℓˣ[j]) ≤ Lˣ*(1-zˣ[i,j])
 			cˣ[j] - cˣ[i] + 0.5*(ℓˣ[i]+ℓˣ[j]) ≤ Lˣ*(1-zˣ[j,i])
 			cʸ[i] - cʸ[j] + 0.5*(ℓʸ[i]+ℓʸ[j]) ≤ Lʸ*(1-zʸ[i,j])
@@ -300,7 +300,7 @@ function add_stay_in_the_box(model::Model, prob::Problem, f::Formulation, vars::
 	@assert (N = prob.N) == length(cˣ) == length(cʸ) == length(ℓˣ) == length(ℓʸ)
 	Lˣ, Lʸ = prob.W, prob.H
 	for i in 1:N
-		@addConstraints(model, begin
+		@constraints(model, begin
 			cˣ[i] ≥      0.5ℓˣ[i]
 			cˣ[i] ≤ Lˣ - 0.5ℓˣ[i]
 			cʸ[i] ≥      0.5ℓʸ[i]
