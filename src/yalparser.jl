@@ -1,4 +1,4 @@
-function yalparser(target::UTF8String)
+function yalparser(target::String)
 
     fp = open(target, "r")
     lines = readlines(fp)
@@ -6,9 +6,9 @@ function yalparser(target::UTF8String)
     block_x = Float64[]
     block_y = Float64[]
     block_area = Float64[]
-    block_name = UTF8String[]
-    arr = Vector{UTF8String}[]
-    ids = Set{UTF8String}()
+    block_name = String[]
+    arr = Vector{String}[]
+    ids = Set{String}()
     W = 0.0
     H = 0.0
 
@@ -36,7 +36,7 @@ function yalparser(target::UTF8String)
             elseif typ == "PARENT"
                 W = y
                 H = x
-                arr = Array(Vector{UTF8String}, length(block_name)-1)
+                arr = Array(Vector{String}, length(block_name)-1)
                 while !contains(line, "NETWORK")
                     it += 1
                     line = lines[it]
@@ -74,7 +74,7 @@ function yalparser(target::UTF8String)
 
 end
 
-function load_yal(filesource::UTF8String, β::Real)
+function load_yal(filesource::String, β::Real)
     (W,H), a, nets = yalparser(joinpath(Pkg.dir("FloorLayout"), "examples", "data", filesource*".yal"))
     N = length(a)
 

@@ -1,9 +1,9 @@
 abstract Cut{R}
 export Cut, addcuts, getcuts
 
-call{T<:Cut{1}}(v::T) = T(Cut{1}, CutCount{1}())
-call{T<:Cut{2}}(v::T) = T(Cut{2}, CutCount{2}())
-call{T<:Cut{3}}(v::T) = T(Cut{3}, CutCount{3}())
+(::Type{T}){T<:Cut{1}}() = T(Cut{1}, CutCount{1}())
+(::Type{T}){T<:Cut{2}}() = T(Cut{2}, CutCount{2}())
+(::Type{T}){T<:Cut{3}}() = T(Cut{3}, CutCount{3}())
 
 # inelegant code to extract the "native" order for a cut;
 # for example, transitivity is enforced by constraining every

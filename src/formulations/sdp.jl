@@ -79,21 +79,21 @@ function solveTakouda(prob::Problem)
     for i in 1:n
         areaconstr = [     h[i]  √(area[i])
                       √(area[i])      w[i] ]
-        @addSDPConstraint(model, areaconstr >= 0)
+        @SDconstraint(model, areaconstr >= 0)
 
         aspconstr = [β[i]    w[i]
                      w[i] area[i]]
-        @addSDPConstraint(model, aspconstr >= 0)
+        @SDconstraint(model, aspconstr >= 0)
         aspconstr = [β[i]    h[i]
                      h[i] area[i]]
-        @addSDPConstraint(model, aspconstr >= 0)
+        @SDconstraint(model, aspconstr >= 0)
 
         sitbconstr = [0.5*(W-w[i])        x[i]
                              x[i]  0.5*(W-w[i])]
-        @addSDPConstraint(model, sitbconstr >= 0)
+        @SDconstraint(model, sitbconstr >= 0)
         sitbconstr = [0.5*(H-h[i])        y[i]
                              y[i]  0.5*(H-h[i])]
-        @addSDPConstraint(model, sitbconstr >= 0)
+        @SDconstraint(model, sitbconstr >= 0)
 
         for j in (i+1):n
             @constraint(model, dˣ[i,j] >= 0.5*(w[i]+w[j]) - 0.5*(1-σ(i,j))*Qˣ[i,j]) # 12

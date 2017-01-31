@@ -37,7 +37,7 @@ immutable Partition4Bit{A<:Area} <: Formulation{A}
 	area::A
 end
 
-call{F<:Formulation}(::Type{F}) = F(SOC())
+(::Type{F}){F<:Formulation}() = F(SOC())
 
 get_metrics(::Objective,   prob::Problem, i, j) = prob.c[i,j]
 get_metrics(::Lowerbounds, prob::Problem, i, j) = prob.wlb[i] + prob.wlb[j] + prob.hlb[i] + prob.hlb[j]
@@ -200,7 +200,7 @@ function base_model{F<:Formulation}(model::Model, prob::Problem, form::F; redund
 		c5[i=1:N,j=(i+1):N], dʸ[i,j] ≥ cʸ[i] - cʸ[j]
 		c6[i=1:N,j=(i+1):N], dʸ[i,j] ≥ cʸ[j] - cʸ[i]
 	end)
-	@objective(model, Min, sum{p[i,j]*(dˣ[i,j]+dʸ[i,j]), i=1:N, j=(i+1):N})
+	@objective(model, Min, sum(p[i,j]*(dˣ[i,j]+dʸ[i,j]) for i=1:N, j=(i+1):N))
 
 	v, zˣ, zʸ = binary_variables(model, N, form; redundant=redundant)
 
