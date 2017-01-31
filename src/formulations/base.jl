@@ -165,7 +165,7 @@ function binary_variables{B<:BinaryBlack}(model::Model, N, ::B; redundant=true)
 	return (z⁺,z⁻), arrˣ, arrʸ
 end
 
-function base_model{F<:Formulation}(model::Model, prob::Problem, form::F; redundant=true, symbreak=true)
+function base_model{F<:Formulation}(model::Model, prob::Problem, form::F; redundant=false, symbreak=true)
 	N   = prob.N
 	lbˣ = prob.wlb
 	lbʸ = prob.hlb
